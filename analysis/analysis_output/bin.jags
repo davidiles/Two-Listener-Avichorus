@@ -1,0 +1,30 @@
+
+
+    model {
+
+      #---------------------------------------------
+      # Zero-inflation term priors
+      #---------------------------------------------
+
+      p.Field ~ dunif(0,1)
+      logit.p.Field <- logit(p.Field)
+
+      p.L1 ~ dunif(0,1)
+      logit.p.L1 <- logit(p.L1)
+
+      p.L2 ~ dunif(0,1)
+      logit.p.L2 <- logit(p.L2)
+
+      #---------------------------------------------
+      # Likelihood
+      #---------------------------------------------
+
+      # Each i represents a stop
+      for (i in 1:n.obs){
+        z.Field[i] ~ dbern(p.Field)
+        z.L1[i] ~ dbern(p.L1)
+        z.L2[i] ~ dbern(p.L2)
+      }
+
+    }
+    

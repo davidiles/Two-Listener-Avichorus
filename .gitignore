@@ -1,9 +1,14 @@
 *.tif
 *.Rhistory
 *.tmp
+*.csv
+*.xlsx
+*.RData
+*.Rdata
 Friis_reconcile/
 Notes/
 PDFs/
 presentations/
 manuscript/
+analysis/old_files/
 
