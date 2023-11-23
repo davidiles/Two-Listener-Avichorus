@@ -1,0 +1,9 @@
+*.tif
+*.Rhistory
+*.tmp
+Friis_reconcile/
+Notes/
+PDFs/
+presentations/
+manuscript/
+
