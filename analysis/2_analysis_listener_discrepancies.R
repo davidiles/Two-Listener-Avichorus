@@ -207,13 +207,24 @@ dev.off()
 # Summary results for manuscript
 # ---------------------------------------------------
 
+# Number of birds detected by first listeners
+nrow(L1)
+
+
 # Number of birds detected by first listeners that were confirmed by second listeners
+sum(L1$detect_2 == 1 & !is.na(L1$detect_2))
 
 # Number of birds detected by first listeners that were considered absent by second listeners
+subset(L1, detect_2 == 0 | is.na(detect_2)) %>% dim()
 
 # Number of birds detected by first listeners that species ID were challenged by second listeners
+sum(L1$spec_2 != L1$spec_1 & !is.na(L1$spec_2))
 
-# Number of new detections added by second listeners
+# Number of birds detected by second listeners
+nrow(L2)
 
-# Number of new species added by second listeners
+# Number of new birds detected by second listeners
+subset(L2, (detect_1 == 0 | is.na(detect_1)) & (detect_2 != 0 & !is.na(detect_2))) %>% dim()
 
+(6443 - 366) + 907
+       
