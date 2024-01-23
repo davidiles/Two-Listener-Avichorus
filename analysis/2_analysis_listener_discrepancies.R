@@ -9,7 +9,7 @@ my.packs <- c(
 if (any(!my.packs %in% installed.packages()[, 'Package'])) {install.packages(my.packs[which(!my.packs %in% installed.packages()[, 'Package'])],dependencies = TRUE)}
 lapply(my.packs, require, character.only = TRUE)
 
-setwd("~/1_Work/ECCC/BBS_avichorus/analysis/script")
+setwd("C:/Users/IlesD/OneDrive - EC-EC/Iles/Projects/Landbirds/Two-Listener-Avichorus/analysis")
 rm(list=ls())
 
 #*********************************************************
@@ -74,7 +74,7 @@ summary(l2_aggregated)
 # Merge 2-reviewer Avichorus data with friis data
 #---------------------------------------------------------
 
-dat_merge <- full_join(friis_bbs, l1_aggregated, all = TRUE) %>%
+dat_merge <- full_join(friis_bbs, l1_aggregated) %>%
   full_join(l2_aggregated)
 
 allspecies_allroutes <- expand.grid(CName = unique(dat_merge$CName), RouteStopYear = unique(dat_merge$RouteStopYear))
@@ -131,6 +131,7 @@ new_detections <- subset(L2, detect_1 == 0 | spec_1 == "Unidentified")
 #-------------------------------------
 # Calculate summary totals from a review of Listener 1's data
 #-------------------------------------
+
 false_positives <- subset(L1, is.na(detect_2) | detect_2 == 0 | is.na(spec_2) | spec_2 == "Unidentified")
 id_challenges <- subset(L1, !is.na(detect_2) & detect_2 == 1 & spec_2 != "Unidentified" & spec_2 != spec_1)
 confirmed <- subset(L2, detect_1 == 1 & spec_2 == spec_1)
@@ -162,45 +163,10 @@ jpeg("./analysis_output/figures/Fig_S1.jpg",width = 10, height = 12, units = "in
 print(review.plot.1)
 dev.off()
 
-# Proportion confirmed
-tmp1 <- species.totals.confirmed[,c(1,2)] %>% rename(Species = 1, Confirmed = 2)
-tmp2 <- species.totals.false_positives[,c(1,2)] %>% rename(Species = 1, False_Detect = 2)
-tmp3 <- species.totals.id_challenges[,c(1,2)] %>% rename(Species = 1, ID_Challenge = 2)
-
-joined_records <- full_join(tmp1,tmp2) %>% full_join(tmp3)
-joined_records[is.na(joined_records)] <- 0
-joined_records$Total <- joined_records$Confirmed + joined_records$False_Detect + joined_records$ID_Challenge
-joined_records$Not_Confirmed <- joined_records$Total - joined_records$Confirmed 
-
-joined_records$prop_confirmed <-  joined_records$Confirmed / joined_records$Total        
-
-for (i in 1:nrow(joined_records)){
-  m1 <- glm(cbind(joined_records$Confirmed[i],joined_records$Not_Confirmed[i])~1,family = binomial(link="logit"))
-
-  ci <- confint(m1)
-  joined_records$p_mean[i] <- plogis(m1$coef)[1]
-  joined_records$p_lcl[i] <- plogis(ci)[1]
-  joined_records$p_ucl[i] <- plogis(ci)[2]
-  
-  
-}    
-
-joined_records <- joined_records %>% arrange(Total)
-joined_records$Species <- factor(joined_records$Species, levels = joined_records$Species)
-
-tmp.plot <- ggplot(joined_records)+
-  geom_point(aes(x = Species, y = p_mean), position = position_dodge(width = 0.5))+
-  geom_errorbar(aes(x = Species, ymin = p_lcl, ymax = p_ucl), position = position_dodge(width = 0.5), width = 0)+
-  ylab(expression(italic(p)))+
-  xlab("Species")+
-  coord_flip(ylim = c(0,1))+
-  theme_bw()+
-  theme(legend.position="top")
-tmp.plot
-
 #----------------------------------
 # Numbers added by Reviewer 2
 #----------------------------------
+
 confirmed <- subset(L2, detect_1 == 1 & spec_2 == spec_1)
 id_challenges <- subset(L1, !is.na(detect_2) & detect_2 == 1 & spec_2 != "Unidentified" & spec_2 != spec_1)
 false_negatives <- subset(L2, is.na(detect_1) | detect_1 == 0 | is.na(spec_1) | spec_1 == "Unidentified") %>%
@@ -231,8 +197,23 @@ review.plot.2 <- ggplot(species.totals2, aes(fill = Type)) +
   theme_bw()+
   ylim(c(0,1000))+
   theme(legend.position="top")#axis.text.y = element_text(size = 7))
+print(review.plot.2)
 
 jpeg("./analysis_output/figures/Fig_S2.jpg",width = 10, height = 12, units = "in", res = 1000)
 print(review.plot.2)
 dev.off()
+
+# ---------------------------------------------------
+# Summary results for manuscript
+# ---------------------------------------------------
+
+# Number of birds detected by first listeners that were confirmed by second listeners
+
+# Number of birds detected by first listeners that were considered absent by second listeners
+
+# Number of birds detected by first listeners that species ID were challenged by second listeners
+
+# Number of new detections added by second listeners
+
+# Number of new species added by second listeners
 
