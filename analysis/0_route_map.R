@@ -1,9 +1,10 @@
-rm(list=ls())
 
 library(tidyverse)
 library(dplyr)
 library(sf)
+library(ggspatial)
 
+rm(list=ls())
 
 sf_use_s2(FALSE)
 
@@ -37,35 +38,58 @@ all_BCRs <- read_sf("data/shapefiles/BCR_boundaries/BCR_Terrestrial_master.shp")
 
 # Country border
 
-CAN_border <- read_sf("data/shapefiles/BCR_boundaries/BCR_Terrestrial_master.shp") %>%
+CAN <- read_sf("data/shapefiles/BCR_boundaries/BCR_Terrestrial_master.shp") %>%
   filter(COUNTRY=="CANADA") %>%
+  st_transform(crs = proj)  %>%
   st_make_valid() %>%
   st_union() %>%
+  st_buffer(1)
+
+USA <- read_sf("data/shapefiles/BCR_boundaries/BCR_Terrestrial_master.shp") %>%
+  filter(COUNTRY=="USA") %>%
   st_transform(crs = proj) %>%
-  st_buffer(100) %>%
-  st_buffer(-100)
+  st_make_valid() %>%
+  st_union() %>%
+  st_buffer(1)
+
+
+border <- st_intersection(CAN,USA)
 
 #create color palette
 colfunc<-colorRampPalette(c("#263238","#78909C","#BDBDBD","#FFECF6"))
 
-#map of CA coloured by BCR
-ca_map<-ggplot()+
-  geom_sf(data=all_BCRs,colour="grey15",aes(fill=as.factor(BCR)))+
-  geom_sf(data=USA_border,colour="black",fill = "transparent", linewidth = 1)+
+survey_map <- ggplot()+
   
-  geom_sf(data=avi_routes,colour="white",fill="darkviolet",size=4,pch=21)+
-
-  scale_fill_manual(breaks=c(unique(all_BCRs$BCR)),values=colfunc(length(unique(all_BCRs$BCR))),name="BCR")+
+  geom_sf(data=all_BCRs,colour="grey15",aes(fill=as.factor(BCR)))+
+  geom_sf(data=border,colour="black",fill = "transparent", linewidth = 1)+
+  
+  geom_sf(data=avi_routes,colour="white",fill="darkviolet",size=3,pch=21)+
+  
+  scale_fill_manual(breaks=c(unique(all_BCRs$BCR)),
+                    values=colfunc(length(unique(all_BCRs$BCR))),name="BCR")+
   
   coord_sf(xlim = xlim, ylim = ylim, crs = proj)+
   
+  annotation_scale(style = "ticks",
+                   text_face = "bold")+
+  
+  annotation_north_arrow(which_north = "true",
+                         location = "tr",
+                         pad_x = unit(0.25, "cm"), pad_y = unit(0.25, "cm"),
+                         height = unit(1, "cm"),
+                         width = unit(1, "cm"),
+                         style = north_arrow_fancy_orienteering(text_col = 'black',
+                                                                line_col = 'gray20',
+                                                                text_face = "bold",
+                                                                fill = 'gray80'))+
+  
   theme_bw()+
   
-  theme(legend.position="none")
- 
-ca_map
+  theme(legend.position="none",
+        panel.grid.major = element_blank(), 
+        panel.grid.minor = element_blank())
 
-
-pdf("C:\\Users\\DalyL\\OneDrive - EC-EC\\Documents\\Avi_route_map.pdf",width = 7,height=9)
-inset_map
+png("output/figures/Fig_1_map.png",units="in", 
+    res = 600, width = 6, height=4)
+print(survey_map)
 dev.off()

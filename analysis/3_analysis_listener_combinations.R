@@ -26,7 +26,7 @@ friis_bbs <- Part1$friis_bbs
 #---------------------------------------------------------
 # Load "2 reviewer data" from Avichorus (called "avi2" in this file)
 #---------------------------------------------------------
-load(file = "./summary_data/avi2.RData")
+load(file = "./summary_data/Part2.RData")
 
 #---------------------------------------------------
 # Ensure both datasets use same RouteYears
@@ -182,34 +182,6 @@ pairwise_listener_summary <- stop_summary %>%
   )
 
 #write.csv(pairwise_listener_summary, "./analysis_output/pairwise_listener_summary.csv",row.names = FALSE)
-#
-#--------------------------------------------------
-# Differences
-#--------------------------------------------------
-
-p1 <- ggplot(stop_summary, aes(Listener_Combination, Richness.diff)) + 
-  geom_hline(yintercept = 0, linetype = 2) + 
-  geom_violin(alpha = 0.3, 
-              fill = "dodgerblue",
-              adjust = 0.5)  + 
-  scale_y_continuous(breaks = seq(-6,6,2), limits = c(-6,6))+
-  theme_bw() +
-  xlab("Listener Order") + ylab("Difference in Richness\n(L2 - L1)")
-p1
-#jpeg("./analysis_output/figures/Fig_6A_Listener_Combinations_Violin.jpg",width = 8, height = 4, units = "in", res = 1000)
-#print(p1)
-#dev.off()
-
-p2 <- ggplot(stop_summary, aes(Listener_Combination, Count.diff)) + 
-  geom_hline(yintercept = 0, linetype = 2) + 
-  geom_violin(alpha = 0.3, fill = "dodgerblue", adjust = 0.5)  + 
-  theme_bw() +
-  xlab("Listener Order") + ylab("Difference in # Birds\n(L2 - L1)")+
-  scale_y_continuous(breaks = seq(-8,8,2), limits = c(-7,7))
-p2
-#jpeg("./analysis_output/figures/Fig_6B_Listener_Combinations_Violin.jpg",width = 8, height = 4, units = "in", res = 1000)
-#print(p2)
-#dev.off()
 
 #-------------------------------------------------
 # CAUSES OF DISCREPANCIES BETWEEN LISTENERS
@@ -229,6 +201,7 @@ new_detections <- subset(L2, detect_1 == 0 | spec_1 == "Unidentified")
 #-------------------------------------
 # Calculate summary totals from a review of Listener 1's data
 #-------------------------------------
+
 false_positives <- subset(L1, is.na(detect_2) | detect_2 == 0 | is.na(spec_2) | spec_2 == "Unidentified")
 id_challenges <- subset(L1, !is.na(detect_2) & detect_2 == 1 & spec_2 != "Unidentified" & spec_2 != spec_1)
 confirmed <- subset(L2, detect_1 == 1 & spec_2 == spec_1)
@@ -245,7 +218,9 @@ species.totals$Type = factor(species.totals$Type, levels = c("Detection challeng
 total.counts <- species.totals %>% group_by(CName) %>% summarize(total = sum(Count)) %>% arrange(desc(total))
 species.totals$CName = factor(species.totals$CName, levels = rev(total.counts$CName))
 
-review.plot.1A <- ggplot(subset(species.totals, CName %in% head(total.counts,50)$CName), aes(fill = Type)) +
+# 25 most common species
+# For each listener combination
+review.plot.1A <- ggplot(subset(species.totals, CName %in% head(total.counts,25)$CName), aes(fill = Type)) +
   geom_bar(aes(x = CName, y = Count), stat = "identity")+
   scale_fill_manual(values=c("#d95f0e","gray35","#99d8c9"))+
   xlab("Species")+
@@ -254,11 +229,10 @@ review.plot.1A <- ggplot(subset(species.totals, CName %in% head(total.counts,50)
   theme_bw()+
   theme(legend.position="top") +
   facet_grid(.~Listener_Combination, scales = "free")
-review.plot.1A
 
-#jpeg("./analysis_output/figures/Fig_X_Listener_Combinations.jpg",width = 12, height = 4, units = "in", res = 1000)
-#print(review.plot.1A)
-#dev.off()
+png("output/figures/Fig_S3.png",width = 12, height = 8, units = "in", res = 1000)
+print(review.plot.1A )
+dev.off()
 
 # Not broken down by listener combination
 review.plot.1B <- ggplot(species.totals, aes(fill = Type)) +
@@ -320,7 +294,7 @@ species.totals2 <- rbind(species.totals.confirmed, species.totals.false_negative
 species.totals2$CName = factor(species.totals2$CName, levels = rev(total.counts$CName))
 species.totals2$Type = factor(species.totals2$Type, levels = c("New detections by L2", "New species ID assigned by L2","Confirmed by L2"))
 
-review.plot.2A <- ggplot(subset(species.totals2, CName %in% head(total.counts,20)$CName), aes(fill = Type)) +
+review.plot.2A <- ggplot(subset(species.totals2, CName %in% head(total.counts,25)$CName), aes(fill = Type)) +
   geom_bar(aes(x = CName, y = Count), stat = "identity")+
   scale_fill_manual(values=c("#8ab7de","gray35","#99d8c9"))+
   xlab("Species")+
@@ -329,6 +303,10 @@ review.plot.2A <- ggplot(subset(species.totals2, CName %in% head(total.counts,20
   theme_bw()+
   facet_grid(.~Listener_Combination, scales = "free")+
   theme(legend.position="top")
+
+png("output/figures/Fig_S4.png",width = 12, height = 8, units = "in", res = 1000)
+print(review.plot.2A )
+dev.off()
 
 # Not broken down by listener combination
 review.plot.2B <- ggplot(species.totals2, aes(fill = Type)) +
@@ -430,10 +408,6 @@ review.plot.1.full <- ggplot(species.totals, aes(fill = Type)) +
   facet_grid(.~Listener_Combination)+
   theme(legend.position="top")
 
-#jpeg("./analysis_output/figures/Fig_S5_Listener_Combinations.jpg",width = 10, height = 20, units = "in", res = 1000)
-#print(review.plot.1.full)
-#dev.off()
-
 review.plot.2.full <- ggplot(species.totals2, aes(fill = Type)) +
   geom_bar(aes(x = CName, y = Count), stat = "identity")+
   scale_fill_manual(values=c("#8ab7de","gray35","#99d8c9"))+
@@ -444,97 +418,4 @@ review.plot.2.full <- ggplot(species.totals2, aes(fill = Type)) +
   ylim(c(0,250))+
   facet_grid(.~Listener_Combination)+
   theme(legend.position="top")#axis.text.y = element_text(size = 7))
-review.plot.2.full
-#jpeg("./analysis_output/figures/Fig_S6_Listener_Combinations.jpg",width = 10, height = 20, units = "in", res = 1000)
-#print(review.plot.2.full)
-#dev.off()
-
-# #---------------------
-# # Rarefaction comparison (1 vs 2 listener)
-# #---------------------
-# library(vegan)
-# library(iNEXT)
-# 
-# species.vec <- unique(dat_merge$CName) %>% sort()
-# site.vec <- unique(dat_merge$RouteStopYear)
-# LC.vec <- c()
-# 
-# L1.matrix <- L2.matrix <- matrix(0,nrow = length(site.vec), ncol = length(species.vec))
-# 
-# for (i in 1:length(site.vec)){
-#   
-#   site.dat <- subset(dat_merge, RouteStopYear == site.vec[i])
-#   LC.vec[i] <- as.character(site.dat$Listener_Combination)[1]
-#   
-#   for (j in 1:nrow(site.dat)){
-#     
-#     if (site.dat$present.L1[j]) L1.matrix[i,which(species.vec == site.dat$CName[j])] <- site.dat$Count.L1[j]
-#     if (site.dat$present.L2[j]) L2.matrix[i,which(species.vec == site.dat$CName[j])] <- site.dat$Count.L2[j]
-#     
-#   }
-#   
-# }
-# 
-# colnames(L1.matrix) <- colnames(L2.matrix) <- species.vec
-# rownames(L1.matrix) <- rownames(L2.matrix) <- site.vec
-# 
-# L1.list <- list(AB = t(L1.matrix[which(LC.vec == "AB"),]) > 0,
-#                 AC = t(L1.matrix[which(LC.vec == "AC"),])> 0,
-#                 BA = t(L1.matrix[which(LC.vec == "BA"),])> 0,
-#                 BC = t(L1.matrix[which(LC.vec == "BC"),])> 0,
-#                 CA = t(L1.matrix[which(LC.vec == "CA"),])> 0,
-#                 CB = t(L1.matrix[which(LC.vec == "CB"),])> 0
-# )
-# 
-# 
-# out.L1 <- iNEXT(L1.list, q = c(0,1),datatype="incidence_raw", endpoint=200)
-# 
-# L2.list <- list(AB = t(L2.matrix[which(LC.vec == "AB"),]) > 0,
-#                 AC = t(L2.matrix[which(LC.vec == "AC"),])> 0,
-#                 BA = t(L2.matrix[which(LC.vec == "BA"),])> 0,
-#                 BC = t(L2.matrix[which(LC.vec == "BC"),])> 0,
-#                 CA = t(L2.matrix[which(LC.vec == "CA"),])> 0,
-#                 CB = t(L2.matrix[which(LC.vec == "CB"),])> 0
-# )
-# 
-# 
-# out.L2 <- iNEXT(L2.list, q = c(0,1), datatype="incidence_raw", endpoint=200)
-# 
-# L.results <- rbind(out.L1$iNextEst$AB %>% add_column(LC = "AB", nL = 1),
-#                    out.L1$iNextEst$AC %>% add_column(LC = "AC", nL = 1),
-#                    out.L1$iNextEst$BA %>% add_column(LC = "BA", nL = 1),
-#                    out.L1$iNextEst$BC %>% add_column(LC = "BC", nL = 1),
-#                    out.L1$iNextEst$CA %>% add_column(LC = "CA", nL = 1),
-#                    out.L1$iNextEst$CB %>% add_column(LC = "CB", nL = 1),
-#                    
-#                    out.L2$iNextEst$AB %>% add_column(LC = "AB", nL = 2),
-#                    out.L2$iNextEst$AC %>% add_column(LC = "AC", nL = 2),
-#                    out.L2$iNextEst$BA %>% add_column(LC = "BA", nL = 2),
-#                    out.L2$iNextEst$BC %>% add_column(LC = "BC", nL = 2),
-#                    out.L2$iNextEst$CA %>% add_column(LC = "CA", nL = 2),
-#                    out.L2$iNextEst$CB %>% add_column(LC = "CB", nL = 2)
-# )
-# 
-# plot1 <- ggplot(subset(L.results, order == 0),aes(x = t, y = qD, ymin = qD.LCL, ymax = qD.UCL, col = factor(nL), fill = factor(nL))) +
-#   geom_ribbon(col = "transparent", alpha = 0.2)+
-#   geom_line(data = subset(L.results, method == "interpolated" & order == 0),size = 1)+
-#   geom_line(data = subset(L.results, method == "extrapolated" & order == 0), linetype = 3, size = 1)+
-#   
-#   theme_bw()+
-#   facet_grid(.~LC)+
-#   ylab("Number of Species")+
-#   xlab("Number of BBS stops")+
-#   scale_color_manual(values = c("orangered","dodgerblue"), name = "# listeners")+
-#   scale_fill_manual(values = c("orangered","dodgerblue"), name = "# listeners")+
-#   geom_hline(yintercept = 63)
-#   
-# 
-# plot1
-# 
-# jpeg("./analysis_output/figures/Rarefaction.jpg",width = 10, height = 3, units = "in", res = 1000)
-# print(plot1)
-# dev.off()
-# 
-# sum(colSums(L1.matrix[which(LC.vec == "AC"),]) > 0)
-# sum(colSums(L2.matrix[which(LC.vec == "AC"),]) > 0)
 

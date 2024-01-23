@@ -1,9 +1,14 @@
+# -----------------------------------------------
+# Overall summaries of number of discrepancies between 1st and second listeners,
+# also broken down by species
+# -----------------------------------------------
+
 # Required packages
 my.packs <- c(
-  
   'tidyverse','reshape2','cowplot','dplyr','ggrepel','readxl',
   'knitr', 'kableExtra','cowplot',
-  'pscl','jagsUI','ggstance',"viridis")
+  'pscl','jagsUI','ggstance',"viridis"
+  )
 
 # if any of them are not installed, install them
 if (any(!my.packs %in% installed.packages()[, 'Package'])) {install.packages(my.packs[which(!my.packs %in% installed.packages()[, 'Package'])],dependencies = TRUE)}
@@ -27,7 +32,7 @@ colnames(friis_bbs)[5] <- "Count.Field"
 #---------------------------------------------------------
 # Load "2 reviewer data" from Avichorus (called "avi2" in this file)
 #---------------------------------------------------------
-load(file = "./summary_data/avi2.RData")
+load(file = "./summary_data/Part2.RData")
 
 #---------------------------------------------------
 # Ensure both datasets use same RouteYears
@@ -159,7 +164,7 @@ review.plot.1 <- ggplot(species.totals, aes(fill = Type)) +
   theme(legend.position="top")
 review.plot.1
 
-jpeg("./analysis_output/figures/Fig_S1.jpg",width = 10, height = 12, units = "in", res = 1000)
+png("output/figures/Fig_S1.png",width = 10, height = 12, units = "in", res = 1000)
 print(review.plot.1)
 dev.off()
 
@@ -199,7 +204,7 @@ review.plot.2 <- ggplot(species.totals2, aes(fill = Type)) +
   theme(legend.position="top")#axis.text.y = element_text(size = 7))
 print(review.plot.2)
 
-jpeg("./analysis_output/figures/Fig_S2.jpg",width = 10, height = 12, units = "in", res = 1000)
+png("output/figures/Fig_S2.png",width = 10, height = 12, units = "in", res = 1000)
 print(review.plot.2)
 dev.off()
 
@@ -209,7 +214,6 @@ dev.off()
 
 # Number of birds detected by first listeners
 nrow(L1)
-
 
 # Number of birds detected by first listeners that were confirmed by second listeners
 sum(L1$detect_2 == 1 & !is.na(L1$detect_2))
@@ -225,6 +229,3 @@ nrow(L2)
 
 # Number of new birds detected by second listeners
 subset(L2, (detect_1 == 0 | is.na(detect_1)) & (detect_2 != 0 & !is.na(detect_2))) %>% dim()
-
-(6443 - 366) + 907
-       
