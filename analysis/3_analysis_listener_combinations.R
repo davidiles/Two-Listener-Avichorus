@@ -9,7 +9,7 @@ my.packs <- c(
 if (any(!my.packs %in% installed.packages()[, 'Package'])) {install.packages(my.packs[which(!my.packs %in% installed.packages()[, 'Package'])],dependencies = TRUE)}
 lapply(my.packs, require, character.only = TRUE)
 
-setwd("C:\\R work\\analysis_LD_avichorus\\script")
+setwd("C:/Users/IlesD/OneDrive - EC-EC/Iles/Projects/Landbirds/Two-Listener-Avichorus/analysis")
 rm(list=ls())
 
 #*********************************************************
